@@ -29,8 +29,10 @@ jobs:
           # Clone destination repository into a temporary directory
           git clone https://$GH_PAT@github.com/mahbpq9/test.git destination-repo
 
-          # Ensure we are on the target branch
+          # Change directory to the cloned repo
           cd destination-repo
+
+          # Ensure we are on the target branch
           if git ls-remote --exit-code --heads origin ${{ inputs.target_branch }}; then
             git checkout ${{ inputs.target_branch }}
           else
@@ -38,10 +40,7 @@ jobs:
             git push -u origin ${{ inputs.target_branch }}
           fi
 
-      - name: Create Initial Commit if Empty Repository
-        run: |
           # If the repository is empty, create an initial commit
-          cd destination-repo
           if [ ! "$(git log --oneline)" ]; then
             echo "# Initial commit" > README.md
             git add README.md
