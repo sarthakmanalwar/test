@@ -26,10 +26,9 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git clone https://$GH_PAT@github.com/mahbpq9/test.git destination-repo
-          cd destination-repo
-
-          # Check if the target branch exists, else create it
+          git clone https://$GH_PAT@github.com/mahbpq9/test.git .
+          
+          # Ensure we are on the target branch
           if git ls-remote --exit-code --heads origin ${{ inputs.target_branch }}; then
             git checkout ${{ inputs.target_branch }}
           else
@@ -37,15 +36,24 @@ jobs:
             git push -u origin ${{ inputs.target_branch }}
           fi
 
-      - name: Copy Source Files to Target Repo (Avoid Nested Directory)
+      - name: Create Initial Commit if Empty Repository
         run: |
-          rsync -av --exclude='.git' --delete ./* destination-repo/ || [[ $? -eq 24 ]]
+          # If the repository is empty, create an initial commit
+          if [ ! "$(git log --oneline)" ]; then
+            echo "# Initial commit" > README.md
+            git add README.md
+            git commit -m "Initial commit"
+            git push -u origin ${{ inputs.target_branch }}
+          fi
+
+      - name: Sync Source Files to Target Branch (Without Extra Folder)
+        run: |
+          rsync -av --exclude='.git' --delete ../* . || [[ $? -eq 24 ]]
 
       - name: Push Changes to Target Branch
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          cd destination-repo
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
