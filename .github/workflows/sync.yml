@@ -22,17 +22,15 @@ jobs:
         with:
           ref: ${{ inputs.source_branch }}
 
-      - name: Remove Existing Files and Clone Destination Repository
+      - name: Clone Destination Repository into Temporary Directory
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          # Remove existing files if any
-          rm -rf *
-          
-          # Clone the destination repository into the current directory
-          git clone https://$GH_PAT@github.com/mahbpq9/test.git .
+          # Clone destination repository into a temporary directory
+          git clone https://$GH_PAT@github.com/mahbpq9/test.git destination-repo
 
           # Ensure we are on the target branch
+          cd destination-repo
           if git ls-remote --exit-code --heads origin ${{ inputs.target_branch }}; then
             git checkout ${{ inputs.target_branch }}
           else
@@ -43,6 +41,7 @@ jobs:
       - name: Create Initial Commit if Empty Repository
         run: |
           # If the repository is empty, create an initial commit
+          cd destination-repo
           if [ ! "$(git log --oneline)" ]; then
             echo "# Initial commit" > README.md
             git add README.md
@@ -52,12 +51,14 @@ jobs:
 
       - name: Sync Source Files to Target Branch (Without Extra Folder)
         run: |
-          rsync -av --exclude='.git' --delete ../* . || [[ $? -eq 24 ]]
+          # Copy files from the source to the destination repo's target branch
+          rsync -av --exclude='.git' --delete ./ destination-repo/ || [[ $? -eq 24 ]]
 
       - name: Push Changes to Target Branch
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
+          cd destination-repo
           git config --global user.email "github-actions@github.com"
           git config --global user.name "GitHub Actions"
 
