@@ -15,7 +15,7 @@ on:
 jobs:
   sync-repo:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # Timeout set to 30 minutes for the whole job to avoid long delays
+    timeout-minutes: 30  # Timeout set to 30 minutes to prevent long delays
 
     steps:
       - name: Checkout Source Repository
