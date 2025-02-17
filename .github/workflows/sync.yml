@@ -22,12 +22,16 @@ jobs:
         with:
           ref: ${{ inputs.source_branch }}
 
-      - name: Clone Destination Repository
+      - name: Remove Existing Files and Clone Destination Repository
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
         run: |
-          git clone https://$GH_PAT@github.com/mahbpq9/test.git .
+          # Remove existing files if any
+          rm -rf *
           
+          # Clone the destination repository into the current directory
+          git clone https://$GH_PAT@github.com/mahbpq9/test.git .
+
           # Ensure we are on the target branch
           if git ls-remote --exit-code --heads origin ${{ inputs.target_branch }}; then
             git checkout ${{ inputs.target_branch }}
